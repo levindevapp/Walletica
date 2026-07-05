@@ -1,7 +1,7 @@
 import { desc, eq } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { db } from '../db/client.js'
-import { expenses } from '../db/schema.js'
+import { categories, expenses, paymentMethods, subcategories } from '../db/schema.js'
 
 type CreateExpenseBody = {
   spentOn: string
@@ -16,7 +16,7 @@ type CreateExpenseBody = {
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null
-const isPositiveInteger = (value: unknown): value is number => Number.isInteger(value) && Number(value) > 0
+const isPositiveInteger = (value: unknown): value is number => typeof value === 'number' && Number.isInteger(value) && value > 0
 const isNullableString = (value: unknown): value is string | null => value === null || typeof value === 'string'
 
 function parseExpenseBody(value: unknown): CreateExpenseBody | null {
@@ -39,12 +39,48 @@ function parseExpenseBody(value: unknown): CreateExpenseBody | null {
 }
 
 export const expensesApi = new Hono()
-  .get('/', (c) => c.json(db.select().from(expenses).orderBy(desc(expenses.spentOn)).all()))
+  .get('/', (c) => {
+    const rows = db.select({
+      id: expenses.id,
+      spentOn: expenses.spentOn,
+      amount: expenses.amount,
+      merchant: expenses.merchant,
+      memo: expenses.memo,
+      costType: expenses.costType,
+      spendingType: expenses.spendingType,
+      category: categories.name,
+      subcategory: subcategories.name,
+      paymentMethod: paymentMethods.name,
+    }).from(expenses)
+      .innerJoin(categories, eq(expenses.categoryId, categories.id))
+      .innerJoin(subcategories, eq(expenses.subcategoryId, subcategories.id))
+      .innerJoin(paymentMethods, eq(expenses.paymentMethodId, paymentMethods.id))
+      .orderBy(desc(expenses.spentOn), desc(expenses.id))
+      .all()
+
+    return c.json(rows)
+  })
+  .get('/:id', (c) => {
+    const id = Number(c.req.param('id'))
+    if (!Number.isInteger(id) || id <= 0) return c.json({ message: 'IDが正しくありません。' }, 400)
+    const expense = db.select().from(expenses).where(eq(expenses.id, id)).get()
+    if (!expense) return c.json({ message: '支出が見つかりません。' }, 404)
+    return c.json(expense)
+  })
   .post('/', async (c) => {
     const body = parseExpenseBody(await c.req.json<unknown>())
     if (!body) return c.json({ message: '入力内容が正しくありません。' }, 400)
     const created = db.insert(expenses).values(body).returning().get()
     return c.json(created, 201)
+  })
+  .put('/:id', async (c) => {
+    const id = Number(c.req.param('id'))
+    if (!Number.isInteger(id) || id <= 0) return c.json({ message: 'IDが正しくありません。' }, 400)
+    const body = parseExpenseBody(await c.req.json<unknown>())
+    if (!body) return c.json({ message: '入力内容が正しくありません。' }, 400)
+    const updated = db.update(expenses).set({ ...body, updatedAt: new Date().toISOString() }).where(eq(expenses.id, id)).returning().get()
+    if (!updated) return c.json({ message: '支出が見つかりません。' }, 404)
+    return c.json(updated)
   })
   .delete('/:id', (c) => {
     const id = Number(c.req.param('id'))

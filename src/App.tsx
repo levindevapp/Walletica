@@ -15,6 +15,7 @@ function App() {
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="expenses/new" element={<ExpenseFormPage />} />
+          <Route path="expenses/:id/edit" element={<ExpenseFormPage />} />
           <Route path="expenses" element={<ExpensesPage />} />
           <Route path="analysis/monthly" element={<MonthlyAnalysisPage />} />
           <Route path="analysis/yearly" element={<YearlyAnalysisPage />} />

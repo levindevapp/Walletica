@@ -5,7 +5,9 @@ CREATE TABLE `categories` (
   `sort_order` integer DEFAULT 0 NOT NULL,
   `created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX `categories_name_unique` ON `categories` (`name`);
+--> statement-breakpoint
 
 CREATE TABLE `subcategories` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -15,14 +17,18 @@ CREATE TABLE `subcategories` (
   `created_at` text DEFAULT CURRENT_TIMESTAMP NOT NULL,
   FOREIGN KEY (`category_id`) REFERENCES `categories`(`id`) ON UPDATE no action ON DELETE cascade
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX `subcategories_category_name_unique` ON `subcategories` (`category_id`,`name`);
+--> statement-breakpoint
 
 CREATE TABLE `payment_methods` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
   `name` text NOT NULL,
   `sort_order` integer DEFAULT 0 NOT NULL
 );
+--> statement-breakpoint
 CREATE UNIQUE INDEX `payment_methods_name_unique` ON `payment_methods` (`name`);
+--> statement-breakpoint
 
 CREATE TABLE `expenses` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -41,6 +47,7 @@ CREATE TABLE `expenses` (
   FOREIGN KEY (`subcategory_id`) REFERENCES `subcategories`(`id`) ON UPDATE no action ON DELETE no action,
   FOREIGN KEY (`payment_method_id`) REFERENCES `payment_methods`(`id`) ON UPDATE no action ON DELETE no action
 );
+--> statement-breakpoint
 
 CREATE TABLE `budgets` (
   `id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,

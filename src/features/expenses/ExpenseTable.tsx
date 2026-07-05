@@ -1,10 +1,11 @@
 import { Pencil, Trash2 } from 'lucide-react'
 import { formatCurrency } from './data'
 import type { Expense } from '../../types/expense'
+import { Link } from 'react-router-dom'
 
-type ExpenseTableProps = { items: Expense[]; editable?: boolean }
+type ExpenseTableProps = { items: Expense[]; editable?: boolean; onDelete?: (id: number) => void; deletingId?: number | null }
 
-export function ExpenseTable({ items, editable = false }: ExpenseTableProps) {
+export function ExpenseTable({ items, editable = false, onDelete, deletingId = null }: ExpenseTableProps) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[680px] text-left text-sm">
@@ -19,7 +20,7 @@ export function ExpenseTable({ items, editable = false }: ExpenseTableProps) {
               <td className="px-4 py-3"><span className="rounded-full bg-brand-50 px-2.5 py-1 text-xs text-brand-700">{expense.category}</span></td>
               <td className="px-4 py-3 font-semibold text-slate-800">{formatCurrency(expense.amount)}</td>
               <td className="px-4 py-3">{expense.paymentMethod}</td>
-              {editable && <td className="px-4 py-3"><div className="flex justify-end gap-1"><button type="button" className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600" aria-label="編集"><Pencil size={15} /></button><button type="button" className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500" aria-label="削除"><Trash2 size={15} /></button></div></td>}
+              {editable && <td className="px-4 py-3"><div className="flex justify-end gap-1"><Link to={`/expenses/${expense.id}/edit`} className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-brand-600" aria-label="編集"><Pencil size={15} /></Link><button type="button" disabled={deletingId === expense.id} onClick={() => onDelete?.(expense.id)} className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-40" aria-label="削除"><Trash2 size={15} /></button></div></td>}
             </tr>
           ))}
         </tbody>
